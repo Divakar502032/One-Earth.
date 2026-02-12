@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { BudgetProfile } from '../types';
+import { BudgetProfile, SUPPORTED_CURRENCIES } from '../types';
 
 interface InputFormProps {
-  onSubmit: (city: string, depDate: string, retDate: string, budgetAmt: number, budgetProf: BudgetProfile) => void;
+  onSubmit: (city: string, depDate: string, retDate: string, budgetAmt: number, budgetProf: BudgetProfile, currency: string) => void;
   isLoading: boolean;
 }
 
@@ -13,13 +13,16 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
   const [returnDate, setReturnDate] = useState('');
   const [budgetAmount, setBudgetAmount] = useState<number>(2500);
   const [budgetProfile, setBudgetProfile] = useState<BudgetProfile>('Mid-Range');
+  const [currency, setCurrency] = useState('USD');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (city.trim() && departureDate && returnDate) {
-      onSubmit(city, departureDate, returnDate, budgetAmount, budgetProfile);
+      onSubmit(city, departureDate, returnDate, budgetAmount, budgetProfile, currency);
     }
   };
+
+  const currentCurrency = SUPPORTED_CURRENCIES.find(c => c.code === currency);
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto space-y-6">
@@ -40,11 +43,25 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Budget */}
-          <div className="md:col-span-1 flex space-x-2">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Budget & Currency */}
+          <div className="md:col-span-5 flex space-x-2">
+            <div className="relative w-1/3">
+              <select
+                className="w-full bg-slate-50 border-none px-4 py-4 rounded-xl font-black text-xs uppercase text-slate-500 focus:ring-2 focus:ring-blue-500/10 outline-none appearance-none"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+              >
+                {SUPPORTED_CURRENCIES.map(c => (
+                  <option key={c.code} value={c.code}>{c.code}</option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[8px] text-slate-300">
+                <i className="fas fa-chevron-down"></i>
+              </div>
+            </div>
             <div className="relative flex-grow">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 font-black text-sm">$</span>
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">{currentCurrency?.symbol}</span>
               <input
                 type="number"
                 required
@@ -65,12 +82,12 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           </div>
 
           {/* Departure */}
-          <div className="relative">
-            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-xs font-black uppercase">Out</span>
+          <div className="md:col-span-3 relative">
+            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-[8px] font-black uppercase tracking-widest">Out</span>
             <input
               type="date"
               required
-              className="w-full bg-slate-50 border-none pl-14 pr-4 py-4 rounded-xl focus:ring-2 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-sm"
+              className="w-full bg-slate-50 border-none pl-14 pr-4 py-4 rounded-xl focus:ring-2 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-xs"
               value={departureDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setDepartureDate(e.target.value)}
@@ -78,12 +95,12 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           </div>
 
           {/* Return */}
-          <div className="relative">
-             <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-xs font-black uppercase">In</span>
+          <div className="md:col-span-4 relative">
+             <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-[8px] font-black uppercase tracking-widest">Return</span>
             <input
               type="date"
               required
-              className="w-full bg-slate-50 border-none pl-12 pr-4 py-4 rounded-xl focus:ring-2 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-sm"
+              className="w-full bg-slate-50 border-none pl-16 pr-4 py-4 rounded-xl focus:ring-2 focus:ring-blue-500/10 outline-none font-bold text-slate-800 text-xs"
               value={returnDate}
               min={departureDate || new Date().toISOString().split('T')[0]}
               onChange={(e) => setReturnDate(e.target.value)}
@@ -112,13 +129,13 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
         </button>
         <div className="flex items-center space-x-3 text-[10px] font-black text-slate-300 uppercase tracking-widest">
            <span className="flex items-center space-x-1">
-             <i className="fas fa-check-circle text-blue-400"></i>
-             <span>Live Grounding</span>
+             <i className="fas fa-earth-americas text-blue-400"></i>
+             <span>Global Ready</span>
            </span>
            <span className="w-1 h-1 rounded-full bg-slate-200"></span>
            <span className="flex items-center space-x-1">
-             <i className="fas fa-bolt text-amber-400"></i>
-             <span>One-Click Booking</span>
+             <i className="fas fa-money-bill-transfer text-emerald-400"></i>
+             <span>{currency} Settlement</span>
            </span>
         </div>
       </div>

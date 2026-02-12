@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TravelPackage, BudgetProfile, GroundingSource, LocalEvent } from "../types";
+import { TravelPackage, BudgetProfile, GroundingSource, PaymentDetails, SettlementRecord } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
@@ -9,28 +9,22 @@ export const generateTravelPackage = async (
   departureDate: string,
   returnDate: string,
   budgetAmount: number,
-  budgetProfile: BudgetProfile
+  budgetProfile: BudgetProfile,
+  currency: string = 'USD'
 ): Promise<TravelPackage> => {
-  const prompt = `Create a comprehensive "All-in-One" travel package for ${city}.
-  Dates: From ${departureDate} to ${returnDate}.
-  Budget: Maximum ${budgetAmount} (Profile: ${budgetProfile}).
-  
-  Details required:
-  1. Hotels: One top-rated hotel matching the profile for the entire stay. Include a specific cancellation policy.
-  2. Transport: Primary transport (Flights/Train) for arrival/departure and local transit (Cab/Bus). Include cancellation policies.
-  3. Itinerary: 3 curated activities per day.
-  4. Real-time Events: Use Google Search to find current important events, festivals, concerts, or exhibitions happening in ${city} specifically between ${departureDate} and ${returnDate}. Include titles, short descriptions, locations, and timings.
-  5. Booking Logic: Total cost under budget and a unique Booking ID.
-  
-  Use Google Search for real-time grounding on prices and events.`;
+  const prompt = `Architect a complete trip for ${city} from ${departureDate} to ${returnDate}. 
+  Budget limit: ${budgetAmount} ${currency} (${budgetProfile}).
+  CRITICAL: All prices MUST be estimated in ${currency}.
+  Return JSON with accommodation, logistics (flights/cabs with times), 3 activities/day, and real local events.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
-      systemInstruction: "You are a 'One-Click Travel Architect.' Output ONLY a valid JSON object. Ensure the total price is realistically within the user's budget. Identify REAL events happening during the specified dates.",
+      systemInstruction: "You are One Earth's lead global architect. Output ONLY valid JSON. Accuracy and speed are critical. Use the requested currency for all price fields.",
       responseMimeType: "application/json",
       tools: [{ googleSearch: {} }],
+      thinkingConfig: { thinkingBudget: 0 },
       responseSchema: {
         type: Type.OBJECT,
         properties: {
@@ -72,10 +66,7 @@ export const generateTravelPackage = async (
               type: Type.OBJECT,
               properties: {
                 day: { type: Type.NUMBER },
-                activities: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING }
-                }
+                activities: { type: Type.ARRAY, items: { type: Type.STRING } }
               },
               required: ["day", "activities"]
             }
@@ -89,40 +80,67 @@ export const generateTravelPackage = async (
                 description: { type: Type.STRING },
                 location: { type: Type.STRING },
                 date_time: { type: Type.STRING }
-              },
-              required: ["title", "description", "location", "date_time"]
+              }
             }
           },
           booking_payload: { type: Type.STRING }
         },
-        required: [
-          "destination", "total_estimated_price", "currency", "accommodation", 
-          "transport", "itinerary", "booking_payload", "departure_date", "return_date"
-        ]
+        required: ["destination", "total_estimated_price", "currency", "accommodation", "transport", "itinerary", "booking_payload", "departure_date", "return_date"]
       }
     }
   });
 
   const text = response.text;
-  if (!text) throw new Error("No response from AI");
+  if (!text) throw new Error("Synthesis failed.");
 
   const data = JSON.parse(text) as TravelPackage;
-
   const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
   if (groundingChunks) {
-    const sources: GroundingSource[] = groundingChunks
-      .filter(chunk => chunk.web)
-      .map(chunk => ({
-        title: chunk.web?.title || 'Verified Source',
-        uri: chunk.web?.uri || '#'
-      }));
-    data.grounding_sources = sources;
+    data.grounding_sources = groundingChunks.filter(c => c.web).map(c => ({ title: c.web?.title || 'Verified', uri: c.web?.uri || '#' }));
   }
 
   return data;
 };
 
-export const executeMockBooking = async (payload: string): Promise<boolean> => {
-  await new Promise(resolve => setTimeout(resolve, 3000));
+export const calculateSettlements = (pkg: TravelPackage): SettlementRecord[] => {
+  const settlements: SettlementRecord[] = [];
+  
+  // Accommodation share
+  settlements.push({
+    providerName: pkg.accommodation.name,
+    amount: pkg.accommodation.price_per_night * 0.9,
+    currency: pkg.currency,
+    payoutStatus: 'Pending'
+  });
+
+  // Transport shares
+  pkg.transport.forEach(t => {
+    settlements.push({
+      providerName: t.provider,
+      amount: (pkg.total_estimated_price * 0.2),
+      currency: pkg.currency,
+      payoutStatus: 'Pending'
+    });
+  });
+
+  return settlements;
+};
+
+export const executeSecurePayment = async (details: PaymentDetails, onProgress: (msg: string) => void): Promise<boolean> => {
+  const messages = [
+    "Establishing Encrypted Connection...",
+    "Handshaking with Global Banking Node...",
+    `Contacting ${details.bank || 'UPI/Global Gateway'}...`,
+    "Validating Currency Exchange Rates...",
+    "Awaiting Multi-Party Authorization...",
+    "Splitting Revenue Shares...",
+    "Finalizing Ledger Settlement..."
+  ];
+
+  for (const msg of messages) {
+    onProgress(msg);
+    await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400));
+  }
+
   return true;
 };

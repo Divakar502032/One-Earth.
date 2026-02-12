@@ -4,7 +4,7 @@ import InputForm from './components/InputForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import ProviderDashboard from './components/ProviderDashboard';
 import { TravelPackage, BudgetProfile, AppView } from './types';
-import { generateTravelPackage, executeMockBooking } from './services/travelService';
+import { generateTravelPackage } from './services/travelService';
 import { saveBooking } from './services/bookingStore';
 
 const App: React.FC = () => {
@@ -16,36 +16,26 @@ const App: React.FC = () => {
   const [view, setView] = useState<AppView>('traveler');
   const [activeTab, setActiveTab] = useState<'home' | 'bookings' | 'profile'>('home');
 
-  const handleGenerate = async (city: string, depDate: string, retDate: string, budgetAmt: number, budgetProf: BudgetProfile) => {
+  const handleGenerate = async (city: string, depDate: string, retDate: string, budgetAmt: number, budgetProf: BudgetProfile, currency: string) => {
     setLoading(true);
     setError(null);
     setPackageData(null);
     setActiveTab('home');
     try {
-      const data = await generateTravelPackage(city, depDate, retDate, budgetAmt, budgetProf);
+      const data = await generateTravelPackage(city, depDate, retDate, budgetAmt, budgetProf, currency);
       setPackageData(data);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Global synthesis failed. Our satellites are readjusting.');
+      setError(err instanceof Error ? err.message : 'Global synthesis failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (!packageData) return;
-    setBooking(true);
-    try {
-      const success = await executeMockBooking(packageData.booking_payload);
-      if (success) {
-        saveBooking(packageData);
-        setShowSuccess(true);
-      }
-    } catch (err) {
-      setError('Secure transaction interrupted. Check connection.');
-    } finally {
-      setBooking(false);
-    }
+    saveBooking(packageData);
+    setShowSuccess(true);
   };
 
   const reset = () => {
@@ -57,7 +47,6 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header - Fixed & Minimal */}
       <header className="glass fixed top-0 w-full z-[100] border-b border-slate-100 h-16 flex items-center px-6">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={reset}>
@@ -77,19 +66,18 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="flex-grow pt-24 pb-32 max-w-7xl mx-auto w-full px-4 sm:px-6">
         {view === 'traveler' ? (
-          <div className="animate-in fade-in duration-500">
+          <div className="animate-in fade-in duration-300">
             {activeTab === 'home' && (
               <>
                 {!packageData && !showSuccess && (
-                  <div className="text-center mb-12 space-y-4">
+                  <div className="text-center mb-10 space-y-4">
                     <h1 className="text-4xl sm:text-7xl font-black tracking-tighter leading-tight gradient-text">
-                      Architecting the <br />Future of Travel.
+                      Synthesized <br />Exploration.
                     </h1>
-                    <p className="text-slate-400 font-medium text-sm sm:text-base max-w-lg mx-auto">
-                      Generate ready-to-book global itineraries in seconds.
+                    <p className="text-slate-400 font-medium text-xs sm:text-sm max-w-lg mx-auto">
+                      High-fidelity global travel architecture. Instant checkout in your currency.
                     </p>
                   </div>
                 )}
@@ -99,7 +87,7 @@ const App: React.FC = () => {
                 )}
 
                 {error && (
-                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-center max-w-md mx-auto font-bold flex items-center justify-center space-x-2 animate-in zoom-in">
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-center max-w-md mx-auto font-bold flex items-center justify-center space-x-2 animate-in zoom-in duration-200">
                     <i className="fas fa-circle-exclamation"></i>
                     <span className="text-xs">{error}</span>
                   </div>
@@ -114,23 +102,20 @@ const App: React.FC = () => {
                 )}
 
                 {showSuccess && (
-                  <div className="max-w-md mx-auto py-12 text-center animate-in zoom-in duration-700">
-                    <div className="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-200">
-                      <i className="fas fa-paper-plane text-2xl"></i>
+                  <div className="max-w-md mx-auto py-12 text-center animate-in zoom-in duration-500">
+                    <div className="w-24 h-24 bg-blue-600 text-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-blue-200">
+                      <i className="fas fa-check-double text-3xl"></i>
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 mb-2">Ticketed.</h2>
-                    <p className="text-slate-400 mb-10 text-sm font-medium">
-                      Your journey to <span className="text-slate-900 font-bold">{packageData?.destination}</span> is officially architected and confirmed.
+                    <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">Settled & Confirmed.</h2>
+                    <p className="text-slate-400 mb-10 text-sm font-medium leading-relaxed">
+                      Your journey to <span className="text-slate-900 font-bold">{packageData?.destination}</span> has been architected and paid. Check your digital wallet.
                     </p>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <button 
                         onClick={reset}
-                        className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black shadow-lg"
+                        className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl"
                       >
                         New Expedition
-                      </button>
-                      <button className="w-full py-4 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
-                        View Digital Wallet
                       </button>
                     </div>
                   </div>
@@ -139,28 +124,28 @@ const App: React.FC = () => {
             )}
 
             {activeTab === 'bookings' && (
-              <div className="text-center py-20 opacity-40">
-                <i className="fas fa-book-open text-4xl mb-4"></i>
-                <p className="text-xs font-black uppercase tracking-widest">Your past adventures will appear here</p>
+              <div className="text-center py-24 opacity-30 flex flex-col items-center">
+                <i className="fas fa-vault text-5xl mb-6"></i>
+                <p className="text-xs font-black uppercase tracking-widest">Transaction History Encrypted</p>
               </div>
             )}
             
             {activeTab === 'profile' && (
-              <div className="max-w-lg mx-auto bg-white rounded-3xl p-8 card-shadow">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
-                    <i className="fas fa-user text-slate-400 text-xl"></i>
+              <div className="max-w-lg mx-auto bg-white rounded-[2.5rem] p-10 card-shadow animate-in slide-in-from-bottom-6 duration-300 border border-slate-50">
+                <div className="flex items-center space-x-6 mb-10">
+                  <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 shadow-sm">
+                    <i className="fas fa-fingerprint text-slate-400 text-3xl"></i>
                   </div>
                   <div>
-                    <h3 className="font-black text-lg">Traveler Profile</h3>
-                    <p className="text-xs text-slate-400">Verified Global Account</p>
+                    <h3 className="font-black text-2xl tracking-tight">Lead Traveler</h3>
+                    <p className="text-xs text-blue-600 font-black uppercase tracking-widest mt-1">Verified Global Node</p>
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {['Digital Identity', 'Payment Methods', 'Sustainability Credits', 'Travel Docs'].map((item) => (
-                    <div key={item} className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors">
-                      <span className="text-sm font-bold text-slate-700">{item}</span>
-                      <i className="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                  {['Financial Hub', 'Identity Vault', 'Travel Credentials', 'Carbon Credits'].map((item) => (
+                    <div key={item} className="p-5 bg-slate-50 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-all group">
+                      <span className="text-sm font-black text-slate-700 tracking-tight">{item}</span>
+                      <i className="fas fa-chevron-right text-[10px] text-slate-300 group-hover:text-slate-900 transition-colors"></i>
                     </div>
                   ))}
                 </div>
@@ -172,41 +157,38 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation */}
       <nav className="glass fixed bottom-0 w-full z-[100] border-t border-slate-100 h-20 flex items-center justify-center px-6 safe-bottom">
-        <div className="max-w-md w-full flex justify-between items-center">
+        <div className="max-w-md w-full flex justify-between items-center px-2">
           <button 
             onClick={() => setActiveTab('home')}
             className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'home' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
           >
-            <i className={`fas ${activeTab === 'home' ? 'fa-house' : 'fa-house-user'} text-lg`}></i>
-            <span className="text-[9px] font-black uppercase tracking-tighter">Explore</span>
+            <i className="fas fa-compass text-lg"></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Architect</span>
           </button>
           
           <button 
             onClick={() => setActiveTab('bookings')}
             className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'bookings' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
           >
-            <i className={`fas ${activeTab === 'bookings' ? 'fa-calendar-check' : 'fa-calendar'} text-lg`}></i>
-            <span className="text-[9px] font-black uppercase tracking-tighter">My Trips</span>
+            <i className="fas fa-vault text-lg"></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Vault</span>
           </button>
           
-          <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center shadow-xl shadow-slate-200 -mt-10 border-4 border-white">
-            <i className="fas fa-plus text-white text-sm"></i>
+          <div className="w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center shadow-2xl -mt-10 border-4 border-white active:scale-90 transition-transform cursor-pointer">
+            <i className="fas fa-plus text-white text-lg"></i>
           </div>
           
-          <button 
-            className="flex flex-col items-center space-y-1 text-slate-300"
-          >
-            <i className="fas fa-magnifying-glass text-lg"></i>
-            <span className="text-[9px] font-black uppercase tracking-tighter">Search</span>
+          <button className="flex flex-col items-center space-y-1 text-slate-300">
+            <i className="fas fa-radar text-lg"></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Live</span>
           </button>
 
           <button 
             onClick={() => setActiveTab('profile')}
             className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'profile' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
           >
-            <i className={`fas ${activeTab === 'profile' ? 'fa-circle-user' : 'fa-user'} text-lg`}></i>
+            <i className="fas fa-fingerprint text-lg"></i>
             <span className="text-[9px] font-black uppercase tracking-tighter">Profile</span>
           </button>
         </div>
