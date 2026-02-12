@@ -31,7 +31,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ pkg, onConfirm, isC
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24">
       
-      {/* Confirm Overly */}
+      {/* Confirm Overlay */}
       {showConfirmDialog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 glass">
           <div className="absolute inset-0 bg-slate-900/10" onClick={() => !isConfirming && setShowConfirmDialog(false)}></div>
@@ -100,7 +100,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ pkg, onConfirm, isC
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         
-        {/* Logistics Column */}
+        {/* Logistics & Real-time Events Column */}
         <div className="lg:col-span-4 space-y-8">
           
           {/* Main Booking Trigger */}
@@ -118,6 +118,30 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ pkg, onConfirm, isC
               </>
             )}
           </button>
+
+          {/* Local Events Section - Eye Catching */}
+          {pkg.local_events && pkg.local_events.length > 0 && (
+            <div className="bg-amber-50 p-8 rounded-[2.5rem] border border-amber-100 space-y-6">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Live Happenings</h4>
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+              </div>
+              <div className="space-y-6">
+                {pkg.local_events.map((event, idx) => (
+                  <div key={idx} className="space-y-2 pb-4 border-b border-amber-100 last:border-0 last:pb-0">
+                    <p className="font-black text-slate-900 text-sm leading-tight">{event.title}</p>
+                    <p className="text-[10px] text-slate-600 font-medium leading-relaxed">{event.description}</p>
+                    <div className="flex items-center justify-between pt-1">
+                       <span className="text-[9px] font-bold text-amber-700 flex items-center">
+                          <i className="fas fa-location-dot mr-1.5 opacity-50"></i> {event.location}
+                       </span>
+                       <span className="text-[9px] font-black text-slate-400">{event.date_time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Accommodation */}
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 space-y-6">

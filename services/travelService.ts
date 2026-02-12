@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TravelPackage, BudgetProfile, GroundingSource } from "../types";
+import { TravelPackage, BudgetProfile, GroundingSource, LocalEvent } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
@@ -16,21 +16,20 @@ export const generateTravelPackage = async (
   Budget: Maximum ${budgetAmount} (Profile: ${budgetProfile}).
   
   Details required:
-  1. Hotels: One top-rated hotel matching the profile for the entire stay. Include a specific cancellation policy (e.g., "Free cancellation before [date]", "Non-refundable").
-  2. Transport: At least two primary transport options (Flights/Train) for arrival/departure and one local transit provider (Cab/Bus). Include specific cancellation policies for each.
-  3. Itinerary: 3 curated activities per day for the specific duration.
-  4. Real-time Status: Mark all transport options with a status (e.g. "On Time", "Available").
-  5. Booking Logic: Generate a total cost under the budget and a unique Booking ID.
+  1. Hotels: One top-rated hotel matching the profile for the entire stay. Include a specific cancellation policy.
+  2. Transport: Primary transport (Flights/Train) for arrival/departure and local transit (Cab/Bus). Include cancellation policies.
+  3. Itinerary: 3 curated activities per day.
+  4. Real-time Events: Use Google Search to find current important events, festivals, concerts, or exhibitions happening in ${city} specifically between ${departureDate} and ${returnDate}. Include titles, short descriptions, locations, and timings.
+  5. Booking Logic: Total cost under budget and a unique Booking ID.
   
-  Use Google Search to find real, current prices, availability, and cancellation terms for these dates.`;
+  Use Google Search for real-time grounding on prices and events.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-preview",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
-      systemInstruction: "You are a 'One-Click Travel Architect.' Output ONLY a valid JSON object. Ensure the total price is realistically within the user's budget. Calculate the number of days between the departure and return dates provided.",
+      systemInstruction: "You are a 'One-Click Travel Architect.' Output ONLY a valid JSON object. Ensure the total price is realistically within the user's budget. Identify REAL events happening during the specified dates.",
       responseMimeType: "application/json",
-      thinkingConfig: { thinkingBudget: 32768 },
       tools: [{ googleSearch: {} }],
       responseSchema: {
         type: Type.OBJECT,
@@ -81,6 +80,19 @@ export const generateTravelPackage = async (
               required: ["day", "activities"]
             }
           },
+          local_events: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                location: { type: Type.STRING },
+                date_time: { type: Type.STRING }
+              },
+              required: ["title", "description", "location", "date_time"]
+            }
+          },
           booking_payload: { type: Type.STRING }
         },
         required: [
@@ -112,6 +124,5 @@ export const generateTravelPackage = async (
 
 export const executeMockBooking = async (payload: string): Promise<boolean> => {
   await new Promise(resolve => setTimeout(resolve, 3000));
-  console.log(`Executing multi-segment booking for ID: ${payload}`);
   return true;
 };

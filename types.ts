@@ -27,6 +27,13 @@ export interface GroundingSource {
   uri: string;
 }
 
+export interface LocalEvent {
+  title: string;
+  description: string;
+  location: string;
+  date_time: string;
+}
+
 export interface TravelPackage {
   destination: string;
   total_estimated_price: number;
@@ -34,6 +41,7 @@ export interface TravelPackage {
   accommodation: Accommodation;
   transport: TransportOption[];
   itinerary: ItineraryDay[];
+  local_events?: LocalEvent[];
   booking_payload: string;
   departure_date: string;
   return_date: string;
