@@ -19,13 +19,11 @@ const App: React.FC = () => {
   const [userCoords, setUserCoords] = useState<{ latitude: number, longitude: number } | undefined>();
 
   useEffect(() => {
-    // Request real-time location on open
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;
         setUserCoords({ latitude, longitude });
         const detected = await detectCurrencyFromLocation(latitude, longitude);
-        // Check if detected is supported, otherwise default USD
         const isSupported = SUPPORTED_CURRENCIES.some(c => c.code === detected);
         setUserCurrency(isSupported ? detected : 'USD');
       }, (err) => {
@@ -64,38 +62,43 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="glass fixed top-0 w-full z-[100] border-b border-slate-100 h-16 flex items-center px-6">
+    <div className="flex flex-col min-h-screen bg-slate-50/50">
+      {/* Header - Adaptive height and blur */}
+      <header className="glass fixed top-0 w-full z-[100] border-b border-slate-200/50 h-16 md:h-20 flex items-center px-4 md:px-10">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={reset}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${view === 'traveler' ? 'bg-slate-900' : 'bg-blue-600'}`}>
-              <i className={`fas ${view === 'traveler' ? 'fa-earth-asia' : 'fa-briefcase'} text-white text-xs`}></i>
+          <div className="flex items-center space-x-3 cursor-pointer group" onClick={reset}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${view === 'traveler' ? 'bg-slate-900 group-hover:bg-blue-600' : 'bg-blue-600 group-hover:bg-slate-900'}`}>
+              <i className={`fas ${view === 'traveler' ? 'fa-earth-asia' : 'fa-briefcase'} text-white text-sm`}></i>
             </div>
-            <span className="text-sm font-black tracking-tighter uppercase">One Earth.</span>
+            <span className="text-lg font-black tracking-tighter uppercase hidden sm:block">One Earth.</span>
           </div>
 
-          <button 
-            onClick={() => setView(v => v === 'traveler' ? 'provider' : 'traveler')}
-            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors flex items-center space-x-2"
-          >
-            <span>{view === 'traveler' ? 'Provider Portal' : 'Traveler Mode'}</span>
-            <i className="fas fa-chevron-right text-[8px]"></i>
-          </button>
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setView(v => v === 'traveler' ? 'provider' : 'traveler')}
+              className="px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-slate-900 transition-all flex items-center space-x-2 border border-slate-200/50"
+            >
+              <i className={`fas ${view === 'traveler' ? 'fa-building-shield' : 'fa-user-astronaut'} text-[10px]`}></i>
+              <span className="hidden md:inline">{view === 'traveler' ? 'Provider Dashboard' : 'Traveler Portal'}</span>
+              <span className="md:hidden">{view === 'traveler' ? 'Provider' : 'Traveler'}</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="flex-grow pt-24 pb-32 max-w-7xl mx-auto w-full px-4 sm:px-6">
+      {/* Main Content - Improved desktop padding */}
+      <main className="flex-grow pt-24 md:pt-32 pb-32 md:pb-40 max-w-7xl mx-auto w-full px-4 md:px-10">
         {view === 'traveler' ? (
-          <div className="animate-in fade-in duration-300">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {activeTab === 'home' && (
-              <>
+              <div className="space-y-12">
                 {!packageData && !showSuccess && (
-                  <div className="text-center mb-10 space-y-4">
-                    <h1 className="text-4xl sm:text-7xl font-black tracking-tighter leading-tight gradient-text">
-                      Synthesized <br />Exploration.
+                  <div className="text-center space-y-4 md:space-y-6">
+                    <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-none gradient-text">
+                      Travel <br className="md:hidden" /> Synthesis.
                     </h1>
-                    <p className="text-slate-400 font-medium text-xs sm:text-sm max-w-lg mx-auto">
-                      High-fidelity global travel architecture. Instant checkout in your localized currency.
+                    <p className="text-slate-400 font-medium text-sm md:text-lg max-w-xl mx-auto">
+                      Architect your next journey with high-fidelity logistics and localized financial settlements.
                     </p>
                   </div>
                 )}
@@ -110,9 +113,10 @@ const App: React.FC = () => {
                 )}
 
                 {error && (
-                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-center max-w-md mx-auto font-bold flex items-center justify-center space-x-2 animate-in zoom-in duration-200">
-                    <i className="fas fa-circle-exclamation"></i>
-                    <span className="text-xs">{error}</span>
+                  <div className="p-6 bg-rose-50 border border-rose-200 rounded-3xl text-rose-600 text-center max-w-md mx-auto font-bold flex flex-col items-center justify-center space-y-2 animate-in zoom-in duration-300">
+                    <i className="fas fa-triangle-exclamation text-xl mb-2"></i>
+                    <span className="text-xs uppercase tracking-widest">Synthesis Error</span>
+                    <span className="text-sm">{error}</span>
                   </div>
                 )}
 
@@ -125,50 +129,64 @@ const App: React.FC = () => {
                 )}
 
                 {showSuccess && (
-                  <div className="max-w-md mx-auto py-12 text-center animate-in zoom-in duration-500">
-                    <div className="w-24 h-24 bg-blue-600 text-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-blue-200">
-                      <i className="fas fa-check-double text-3xl"></i>
+                  <div className="max-w-xl mx-auto py-20 text-center animate-in zoom-in duration-500 bg-white rounded-[3rem] shadow-2xl border border-slate-100 p-10">
+                    <div className="w-28 h-28 bg-emerald-500 text-white rounded-[3rem] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-emerald-200">
+                      <i className="fas fa-check-double text-4xl"></i>
                     </div>
-                    <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">Settled & Confirmed.</h2>
-                    <p className="text-slate-400 mb-10 text-sm font-medium leading-relaxed">
-                      Your journey to <span className="text-slate-900 font-bold">{packageData?.destination}</span> has been architected and paid. Check your digital wallet.
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tighter">Mission Success.</h2>
+                    <p className="text-slate-500 mb-10 text-base md:text-lg font-medium leading-relaxed">
+                      Your expedition to <span className="text-slate-900 font-bold">{packageData?.destination}</span> has been architected, settled, and confirmed in your local ledger.
                     </p>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <button 
                         onClick={reset}
-                        className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl"
+                        className="bg-slate-900 text-white py-5 px-8 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl active:scale-95"
                       >
-                        New Expedition
+                        New Journey
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('bookings')}
+                        className="bg-slate-100 text-slate-600 py-5 px-8 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                      >
+                        View Vault
                       </button>
                     </div>
                   </div>
                 )}
-              </>
+              </div>
             )}
 
             {activeTab === 'bookings' && (
-              <div className="text-center py-24 opacity-30 flex flex-col items-center">
-                <i className="fas fa-vault text-5xl mb-6"></i>
-                <p className="text-xs font-black uppercase tracking-widest">Transaction History Encrypted</p>
+              <div className="max-w-4xl mx-auto py-24 text-center space-y-8">
+                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto border border-slate-200">
+                  <i className="fas fa-vault text-slate-300 text-3xl"></i>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-black text-slate-900">Encrypted Archives</h3>
+                  <p className="text-slate-400 text-sm font-medium uppercase tracking-[0.2em]">Transaction History Offline</p>
+                </div>
               </div>
             )}
             
             {activeTab === 'profile' && (
-              <div className="max-w-lg mx-auto bg-white rounded-[2.5rem] p-10 card-shadow animate-in slide-in-from-bottom-6 duration-300 border border-slate-50">
-                <div className="flex items-center space-x-6 mb-10">
-                  <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 shadow-sm">
-                    <i className="fas fa-fingerprint text-slate-400 text-3xl"></i>
+              <div className="max-w-2xl mx-auto bg-white rounded-[3.5rem] p-8 md:p-14 card-shadow animate-in slide-in-from-bottom-10 duration-500 border border-slate-100">
+                <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-10 mb-12">
+                  <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center border border-slate-200 shadow-inner group">
+                    <i className="fas fa-fingerprint text-slate-300 group-hover:text-blue-500 text-4xl transition-colors"></i>
                   </div>
-                  <div>
-                    <h3 className="font-black text-2xl tracking-tight">Lead Traveler</h3>
-                    <p className="text-xs text-blue-600 font-black uppercase tracking-widest mt-1">Verified Global Node</p>
+                  <div className="text-center md:text-left space-y-2">
+                    <h3 className="font-black text-3xl md:text-4xl tracking-tight">Global Node #8821</h3>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                      <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100">Verified Identity</span>
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">Settlement Ready</span>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  {['Financial Hub', 'Identity Vault', 'Travel Credentials', 'Carbon Credits'].map((item) => (
-                    <div key={item} className="p-5 bg-slate-50 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-all group">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {['Financial Ledger', 'Security Keys', 'Travel Credentials', 'Carbon Offset', 'Linked Wallets', 'Privacy Nodes'].map((item) => (
+                    <div key={item} className="p-6 bg-slate-50/50 hover:bg-white hover:shadow-xl hover:border-blue-100 rounded-3xl border border-slate-100 flex justify-between items-center cursor-pointer transition-all group">
                       <span className="text-sm font-black text-slate-700 tracking-tight">{item}</span>
-                      <i className="fas fa-chevron-right text-[10px] text-slate-300 group-hover:text-slate-900 transition-colors"></i>
+                      <i className="fas fa-arrow-right-long text-[10px] text-slate-300 group-hover:text-blue-600 transition-all translate-x-[-4px] group-hover:translate-x-0"></i>
                     </div>
                   ))}
                 </div>
@@ -180,38 +198,44 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <nav className="glass fixed bottom-0 w-full z-[100] border-t border-slate-100 h-20 flex items-center justify-center px-6 safe-bottom">
-        <div className="max-w-md w-full flex justify-between items-center px-2">
+      {/* Navigation - Adaptive Dock Style */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-8 flex justify-center pointer-events-none">
+        <div className="glass max-w-md w-full h-20 md:h-22 rounded-[2.5rem] flex justify-between items-center px-6 md:px-10 border border-slate-200/50 shadow-2xl pointer-events-auto">
           <button 
             onClick={() => setActiveTab('home')}
-            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'home' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
+            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'home' ? 'text-blue-600 scale-110' : 'text-slate-300 hover:text-slate-500'}`}
           >
-            <i className="fas fa-compass text-lg"></i>
-            <span className="text-[9px] font-black uppercase tracking-tighter">Architect</span>
+            <i className="fas fa-compass text-lg md:text-xl"></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Explore</span>
           </button>
           
           <button 
             onClick={() => setActiveTab('bookings')}
-            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'bookings' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
+            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'bookings' ? 'text-blue-600 scale-110' : 'text-slate-300 hover:text-slate-500'}`}
           >
-            <i className="fas fa-vault text-lg"></i>
-            <span className="text-[9px] font-black uppercase tracking-tighter">Vault</span>
+            <i className="fas fa-shield-halved text-lg md:text-xl"></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Archives</span>
           </button>
           
-          <div className="w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center shadow-2xl -mt-10 border-4 border-white active:scale-90 transition-transform cursor-pointer">
-            <i className="fas fa-plus text-white text-lg"></i>
+          <div className="relative">
+            <div 
+              onClick={reset}
+              className="w-16 h-16 bg-slate-900 text-white rounded-[1.5rem] flex items-center justify-center shadow-2xl -mt-16 border-4 border-white hover:bg-blue-600 hover:scale-110 transition-all cursor-pointer group"
+            >
+              <i className="fas fa-plus text-xl group-hover:rotate-90 transition-transform"></i>
+            </div>
           </div>
           
-          <button className="flex flex-col items-center space-y-1 text-slate-300">
-            <i className="fas fa-radar text-lg"></i>
-            <span className="text-[9px] font-black uppercase tracking-tighter">Live</span>
+          <button className="flex flex-col items-center space-y-1 text-slate-300 hover:text-slate-500 transition-colors">
+            <i className="fas fa-radar text-lg md:text-xl"></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Feeds</span>
           </button>
 
           <button 
             onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'profile' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
+            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'profile' ? 'text-blue-600 scale-110' : 'text-slate-300 hover:text-slate-500'}`}
           >
-            <i className="fas fa-fingerprint text-lg"></i>
+            <i className="fas fa-id-card-clip text-lg md:text-xl"></i>
             <span className="text-[9px] font-black uppercase tracking-tighter">Profile</span>
           </button>
         </div>
