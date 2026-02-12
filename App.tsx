@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import InputForm from './components/InputForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import ProviderDashboard from './components/ProviderDashboard';
-import { TravelPackage, BudgetProfile, AppView } from './types';
-import { generateTravelPackage } from './services/travelService';
+import { TravelPackage, BudgetProfile, AppView, SUPPORTED_CURRENCIES } from './types';
+import { generateTravelPackage, detectCurrencyFromLocation } from './services/travelService';
 import { saveBooking } from './services/bookingStore';
 
 const App: React.FC = () => {
@@ -15,6 +15,24 @@ const App: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [view, setView] = useState<AppView>('traveler');
   const [activeTab, setActiveTab] = useState<'home' | 'bookings' | 'profile'>('home');
+  const [userCurrency, setUserCurrency] = useState('USD');
+  const [userCoords, setUserCoords] = useState<{ latitude: number, longitude: number } | undefined>();
+
+  useEffect(() => {
+    // Request real-time location on open
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserCoords({ latitude, longitude });
+        const detected = await detectCurrencyFromLocation(latitude, longitude);
+        // Check if detected is supported, otherwise default USD
+        const isSupported = SUPPORTED_CURRENCIES.some(c => c.code === detected);
+        setUserCurrency(isSupported ? detected : 'USD');
+      }, (err) => {
+        console.warn("Geolocation denied or failed:", err.message);
+      });
+    }
+  }, []);
 
   const handleGenerate = async (city: string, depDate: string, retDate: string, budgetAmt: number, budgetProf: BudgetProfile, currency: string) => {
     setLoading(true);
@@ -77,13 +95,18 @@ const App: React.FC = () => {
                       Synthesized <br />Exploration.
                     </h1>
                     <p className="text-slate-400 font-medium text-xs sm:text-sm max-w-lg mx-auto">
-                      High-fidelity global travel architecture. Instant checkout in your currency.
+                      High-fidelity global travel architecture. Instant checkout in your localized currency.
                     </p>
                   </div>
                 )}
 
                 {!packageData && !showSuccess && (
-                  <InputForm onSubmit={handleGenerate} isLoading={loading} />
+                  <InputForm 
+                    onSubmit={handleGenerate} 
+                    isLoading={loading} 
+                    initialCurrency={userCurrency}
+                    coords={userCoords}
+                  />
                 )}
 
                 {error && (

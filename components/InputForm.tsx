@@ -1,19 +1,56 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BudgetProfile, SUPPORTED_CURRENCIES } from '../types';
+import { getLocationSuggestions } from '../services/travelService';
 
 interface InputFormProps {
   onSubmit: (city: string, depDate: string, retDate: string, budgetAmt: number, budgetProf: BudgetProfile, currency: string) => void;
   isLoading: boolean;
+  initialCurrency?: string;
+  coords?: { latitude: number, longitude: number };
 }
 
-const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
+const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading, initialCurrency, coords }) => {
   const [city, setCity] = useState('');
   const [departureDate, setDepartureDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [budgetAmount, setBudgetAmount] = useState<number>(2500);
   const [budgetProfile, setBudgetProfile] = useState<BudgetProfile>('Mid-Range');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState(initialCurrency || 'USD');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  const suggestionTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (initialCurrency) setCurrency(initialCurrency);
+  }, [initialCurrency]);
+
+  const handleCityChange = (val: string) => {
+    setCity(val);
+    setShowSuggestions(true);
+    
+    if (suggestionTimeoutRef.current) window.clearTimeout(suggestionTimeoutRef.current);
+    
+    if (val.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    suggestionTimeoutRef.current = window.setTimeout(async () => {
+      setIsSuggesting(true);
+      const items = await getLocationSuggestions(val, coords?.latitude, coords?.longitude);
+      setSuggestions(items);
+      setIsSuggesting(false);
+    }, 600);
+  };
+
+  const selectSuggestion = (s: string) => {
+    setCity(s);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,8 +62,8 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
   const currentCurrency = SUPPORTED_CURRENCIES.find(c => c.code === currency);
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto space-y-6">
-      <div className="bg-white rounded-[2rem] p-4 sm:p-8 card-shadow border border-slate-50 space-y-6">
+    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto space-y-6 relative">
+      <div className="bg-white rounded-[2rem] p-4 sm:p-8 card-shadow border border-slate-50 space-y-6 relative z-[50]">
         
         {/* Main Location Input */}
         <div className="relative group">
@@ -36,11 +73,36 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
           <input
             type="text"
             required
+            autoComplete="off"
             placeholder="Where would you like to explore?"
             className="w-full bg-slate-50 border-none pl-16 pr-6 py-6 rounded-2xl focus:ring-2 focus:ring-blue-500/10 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-300 sm:text-lg"
             value={city}
-            onChange={(e) => setCity(e.target.value)}
+            onChange={(e) => handleCityChange(e.target.value)}
+            onFocus={() => city.length >= 3 && setShowSuggestions(true)}
           />
+          
+          {/* Suggestions Dropdown */}
+          {showSuggestions && (suggestions.length > 0 || isSuggesting) && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white/80 backdrop-blur-xl border border-slate-100 rounded-[2rem] shadow-2xl overflow-hidden z-[60] animate-in slide-in-from-top-2 duration-200">
+              {isSuggesting && (
+                <div className="p-6 flex items-center justify-center space-x-3">
+                   <i className="fas fa-circle-notch fa-spin text-blue-500 text-xs"></i>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Consulting Maps...</span>
+                </div>
+              )}
+              {!isSuggesting && suggestions.map((s, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => selectSuggestion(s)}
+                  className="w-full text-left px-8 py-5 hover:bg-slate-900 hover:text-white transition-colors flex items-center space-x-4 border-b border-slate-50 last:border-none"
+                >
+                  <i className="fas fa-location-dot text-xs opacity-30"></i>
+                  <span className="text-sm font-bold tracking-tight">{s}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">

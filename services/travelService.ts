@@ -4,6 +4,57 @@ import { TravelPackage, BudgetProfile, GroundingSource, PaymentDetails, Settleme
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
+export const detectCurrencyFromLocation = async (lat: number, lng: number): Promise<string> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `The user is at coordinates: latitude ${lat}, longitude ${lng}. What is the standard ISO 4217 currency code for this location? Return only the 3-letter code.`,
+      config: {
+        tools: [{ googleMaps: {} }],
+        toolConfig: {
+          retrievalConfig: {
+            latLng: { latitude: lat, longitude: lng }
+          }
+        }
+      }
+    });
+    const code = response.text?.trim().toUpperCase().slice(0, 3);
+    return code || 'USD';
+  } catch (err) {
+    console.error("Currency detection failed:", err);
+    return 'USD';
+  }
+};
+
+export const getLocationSuggestions = async (query: string, lat?: number, lng?: number): Promise<string[]> => {
+  if (query.length < 3) return [];
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Provide a list of 5 real-world destination names (city, country) that match or start with: "${query}". Return the result as a raw JSON array of strings.`,
+      config: {
+        responseMimeType: "application/json",
+        tools: [{ googleMaps: {} }],
+        toolConfig: lat && lng ? {
+          retrievalConfig: {
+            latLng: { latitude: lat, longitude: lng }
+          }
+        } : undefined,
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+    
+    return JSON.parse(response.text || '[]');
+  } catch (err) {
+    console.error("Location suggestions failed:", err);
+    return [];
+  }
+};
+
 export const generateTravelPackage = async (
   city: string,
   departureDate: string,
