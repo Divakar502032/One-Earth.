@@ -3,30 +3,63 @@
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>One Earth — Travel Architect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>One Earth — Global Travel Architect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+      
+      :root {
+        --app-bg: #f8fafc;
+        --accent: #2563eb;
+        --safe-top: env(safe-area-inset-top);
+        --safe-bottom: env(safe-area-inset-bottom);
+      }
+
       body {
         font-family: 'Plus Jakarta Sans', sans-serif;
-        background-color: #fdfdfe;
+        background-color: var(--app-bg);
         color: #0f172a;
+        -webkit-tap-highlight-color: transparent;
+        overflow-x: hidden;
       }
+
       .glass {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
       }
+
+      .bottom-nav-safe {
+        padding-bottom: calc(4.5rem + var(--safe-bottom));
+      }
+
+      .card-shadow {
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04);
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+
       .gradient-text {
-        background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
     </style>
   </head>
-  <body>
+  <body class="selection:bg-blue-100">
     <div id="root"></div>
   </body>
 </html>

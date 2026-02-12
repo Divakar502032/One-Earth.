@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import InputForm from './components/InputForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import ProviderDashboard from './components/ProviderDashboard';
@@ -14,17 +14,19 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [view, setView] = useState<AppView>('traveler');
+  const [activeTab, setActiveTab] = useState<'home' | 'bookings' | 'profile'>('home');
 
   const handleGenerate = async (city: string, depDate: string, retDate: string, budgetAmt: number, budgetProf: BudgetProfile) => {
     setLoading(true);
     setError(null);
     setPackageData(null);
+    setActiveTab('home');
     try {
       const data = await generateTravelPackage(city, depDate, retDate, budgetAmt, budgetProf);
       setPackageData(data);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Architecture failed. Please try a different spot or budget.');
+      setError(err instanceof Error ? err.message : 'Global synthesis failed. Our satellites are readjusting.');
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,7 @@ const App: React.FC = () => {
         setShowSuccess(true);
       }
     } catch (err) {
-      alert('One-click booking encountered an issue. Our concierge is looking into it.');
+      setError('Secure transaction interrupted. Check connection.');
     } finally {
       setBooking(false);
     }
@@ -50,116 +52,165 @@ const App: React.FC = () => {
     setPackageData(null);
     setShowSuccess(false);
     setError(null);
-  };
-
-  const toggleView = () => {
-    setView(v => v === 'traveler' ? 'provider' : 'traveler');
-    reset();
+    setActiveTab('home');
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa]">
-      {/* Premium Navbar */}
-      <nav className="glass sticky top-0 z-[60] border-b border-slate-200/40 px-6 h-20 flex items-center justify-center">
-        <div className="max-w-7xl w-full flex justify-between items-center">
-          <div className="flex items-center space-x-3 cursor-pointer group" onClick={reset}>
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:rotate-6 shadow-sm ${view === 'traveler' ? 'bg-slate-900' : 'bg-blue-600'}`}>
-              <i className={`fas ${view === 'traveler' ? 'fa-earth-asia' : 'fa-briefcase'} text-white text-lg`}></i>
+    <div className="flex flex-col min-h-screen">
+      {/* Header - Fixed & Minimal */}
+      <header className="glass fixed top-0 w-full z-[100] border-b border-slate-100 h-16 flex items-center px-6">
+        <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
+          <div className="flex items-center space-x-2 cursor-pointer" onClick={reset}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${view === 'traveler' ? 'bg-slate-900' : 'bg-blue-600'}`}>
+              <i className={`fas ${view === 'traveler' ? 'fa-earth-asia' : 'fa-briefcase'} text-white text-xs`}></i>
             </div>
-            <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-extrabold tracking-tight text-slate-900 leading-none">One Earth</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                {view === 'traveler' ? 'Architecture Studio' : 'Partner Network'}
-              </span>
-            </div>
+            <span className="text-sm font-black tracking-tighter uppercase">One Earth.</span>
           </div>
-          
-          <div className="flex items-center space-x-2 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
-            <button 
-              onClick={() => view !== 'traveler' && toggleView()}
-              className={`px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${view === 'traveler' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Explore
-            </button>
-            <button 
-              onClick={() => view !== 'provider' && toggleView()}
-              className={`px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${view === 'provider' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Partners
-            </button>
-          </div>
+
+          <button 
+            onClick={() => setView(v => v === 'traveler' ? 'provider' : 'traveler')}
+            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors flex items-center space-x-2"
+          >
+            <span>{view === 'traveler' ? 'Provider Portal' : 'Traveler Mode'}</span>
+            <i className="fas fa-chevron-right text-[8px]"></i>
+          </button>
         </div>
-      </nav>
+      </header>
 
-      <main className="max-w-7xl mx-auto px-6 mt-12 sm:mt-20">
+      {/* Main Content Area */}
+      <main className="flex-grow pt-24 pb-32 max-w-7xl mx-auto w-full px-4 sm:px-6">
         {view === 'traveler' ? (
-          <>
-            {!packageData && !showSuccess && (
-              <div className="text-center mb-16 space-y-6 animate-in fade-in slide-in-from-top-4 duration-1000">
-                <h1 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[0.9]">
-                  Travel in <br />
-                  <span className="gradient-text">One Click.</span>
-                </h1>
-                <p className="text-slate-500 max-w-xl mx-auto text-lg font-medium">
-                  We architect complete journeys. Flights, hotels, and experiences synthesized in seconds.
-                </p>
+          <div className="animate-in fade-in duration-500">
+            {activeTab === 'home' && (
+              <>
+                {!packageData && !showSuccess && (
+                  <div className="text-center mb-12 space-y-4">
+                    <h1 className="text-4xl sm:text-7xl font-black tracking-tighter leading-tight gradient-text">
+                      Architecting the <br />Future of Travel.
+                    </h1>
+                    <p className="text-slate-400 font-medium text-sm sm:text-base max-w-lg mx-auto">
+                      Generate ready-to-book global itineraries in seconds.
+                    </p>
+                  </div>
+                )}
+
+                {!packageData && !showSuccess && (
+                  <InputForm onSubmit={handleGenerate} isLoading={loading} />
+                )}
+
+                {error && (
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-center max-w-md mx-auto font-bold flex items-center justify-center space-x-2 animate-in zoom-in">
+                    <i className="fas fa-circle-exclamation"></i>
+                    <span className="text-xs">{error}</span>
+                  </div>
+                )}
+
+                {packageData && !showSuccess && (
+                  <ItineraryDisplay 
+                    pkg={packageData} 
+                    onConfirm={handleConfirm} 
+                    isConfirming={booking} 
+                  />
+                )}
+
+                {showSuccess && (
+                  <div className="max-w-md mx-auto py-12 text-center animate-in zoom-in duration-700">
+                    <div className="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-200">
+                      <i className="fas fa-paper-plane text-2xl"></i>
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 mb-2">Ticketed.</h2>
+                    <p className="text-slate-400 mb-10 text-sm font-medium">
+                      Your journey to <span className="text-slate-900 font-bold">{packageData?.destination}</span> is officially architected and confirmed.
+                    </p>
+                    <div className="space-y-3">
+                      <button 
+                        onClick={reset}
+                        className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black shadow-lg"
+                      >
+                        New Expedition
+                      </button>
+                      <button className="w-full py-4 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                        View Digital Wallet
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'bookings' && (
+              <div className="text-center py-20 opacity-40">
+                <i className="fas fa-book-open text-4xl mb-4"></i>
+                <p className="text-xs font-black uppercase tracking-widest">Your past adventures will appear here</p>
               </div>
             )}
-
-            {!packageData && !showSuccess && (
-              <div className="pb-20">
-                <InputForm onSubmit={handleGenerate} isLoading={loading} />
-              </div>
-            )}
-
-            {error && (
-              <div className="mt-8 p-5 bg-rose-50 border border-rose-100 rounded-3xl text-rose-600 text-center max-w-md mx-auto font-bold flex items-center justify-center space-x-3 animate-in zoom-in">
-                <i className="fas fa-exclamation-circle text-lg"></i>
-                <span>{error}</span>
-              </div>
-            )}
-
-            {packageData && !showSuccess && (
-              <ItineraryDisplay 
-                pkg={packageData} 
-                onConfirm={handleConfirm} 
-                isConfirming={booking} 
-              />
-            )}
-
-            {showSuccess && (
-              <div className="max-w-xl mx-auto py-20 text-center animate-in zoom-in duration-700">
-                <div className="w-24 h-24 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-blue-200 animate-bounce">
-                  <i className="fas fa-paper-plane text-3xl"></i>
+            
+            {activeTab === 'profile' && (
+              <div className="max-w-lg mx-auto bg-white rounded-3xl p-8 card-shadow">
+                <div className="flex items-center space-x-4 mb-8">
+                  <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
+                    <i className="fas fa-user text-slate-400 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg">Traveler Profile</h3>
+                    <p className="text-xs text-slate-400">Verified Global Account</p>
+                  </div>
                 </div>
-                <h2 className="text-5xl font-black text-slate-900 mb-4 tracking-tighter">Skybound.</h2>
-                <p className="text-slate-500 mb-12 text-lg font-medium">
-                  Your full trip to <span className="text-slate-900 font-bold">{packageData?.destination}</span> is booked. Check your inbox for the magic key.
-                </p>
-                <div className="flex flex-col gap-4">
-                  <button 
-                    onClick={reset}
-                    className="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200"
-                  >
-                    Start New Journey
-                  </button>
-                  <button className="w-full bg-white border border-slate-200 text-slate-500 py-5 rounded-2xl font-bold text-sm uppercase tracking-widest hover:border-slate-900 hover:text-slate-900 transition-all">
-                    Download All Vouchers
-                  </button>
+                <div className="space-y-4">
+                  {['Digital Identity', 'Payment Methods', 'Sustainability Credits', 'Travel Docs'].map((item) => (
+                    <div key={item} className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors">
+                      <span className="text-sm font-bold text-slate-700">{item}</span>
+                      <i className="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
-          </>
+          </div>
         ) : (
           <ProviderDashboard />
         )}
       </main>
 
-      <footer className="mt-32 border-t border-slate-100 py-16 text-center opacity-40 hover:opacity-100 transition-opacity">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-          One Earth &copy; 2024 &bull; Built with Gemini 3.0
-        </p>
-      </footer>
+      {/* Mobile Bottom Navigation */}
+      <nav className="glass fixed bottom-0 w-full z-[100] border-t border-slate-100 h-20 flex items-center justify-center px-6 safe-bottom">
+        <div className="max-w-md w-full flex justify-between items-center">
+          <button 
+            onClick={() => setActiveTab('home')}
+            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'home' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
+          >
+            <i className={`fas ${activeTab === 'home' ? 'fa-house' : 'fa-house-user'} text-lg`}></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Explore</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('bookings')}
+            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'bookings' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
+          >
+            <i className={`fas ${activeTab === 'bookings' ? 'fa-calendar-check' : 'fa-calendar'} text-lg`}></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">My Trips</span>
+          </button>
+          
+          <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center shadow-xl shadow-slate-200 -mt-10 border-4 border-white">
+            <i className="fas fa-plus text-white text-sm"></i>
+          </div>
+          
+          <button 
+            className="flex flex-col items-center space-y-1 text-slate-300"
+          >
+            <i className="fas fa-magnifying-glass text-lg"></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Search</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('profile')}
+            className={`flex flex-col items-center space-y-1 transition-all ${activeTab === 'profile' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}
+          >
+            <i className={`fas ${activeTab === 'profile' ? 'fa-circle-user' : 'fa-user'} text-lg`}></i>
+            <span className="text-[9px] font-black uppercase tracking-tighter">Profile</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };
