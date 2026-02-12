@@ -1,5 +1,7 @@
 {
-  "name": "One-Click Travel Architect",
+  "name": "One Earth.",
   "description": "A high-performance travel planning tool that generates complete, ready-to-book itineraries with estimated costs, logistics, and a seamless mock checkout experience using Gemini's advanced reasoning.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "geolocation"
+  ]
 }
