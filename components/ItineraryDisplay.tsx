@@ -158,7 +158,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ pkg, onConfirm, isC
         </div>
       )}
 
-      {/* Hero Header - Wider and more dynamic */}
+      {/* Hero Header */}
       <div className="relative rounded-[3.5rem] overflow-hidden aspect-[16/9] md:aspect-[21/7] shadow-[0_48px_80px_-20px_rgba(0,0,0,0.1)] group border border-slate-100">
         <img 
           src={`https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=1600`} 
@@ -166,7 +166,6 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ pkg, onConfirm, isC
           className="absolute inset-0 w-full h-full object-cover transition-all duration-[3000ms] scale-110 group-hover:scale-100"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/20 to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-transparent to-transparent"></div>
         
         <div className="absolute bottom-10 left-10 right-10 md:bottom-16 md:left-16 md:right-16 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
           <div className="space-y-4">
@@ -182,155 +181,4 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ pkg, onConfirm, isC
              </div>
           </div>
           <div className="bg-white/10 backdrop-blur-2xl border border-white/20 p-10 rounded-[2.5rem] text-right shadow-2xl min-w-[300px]">
-             <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-2">Total Estimated Payout</p>
-             <p className="text-5xl font-black text-white tracking-tighter">{pkg.currency} {pkg.total_estimated_price.toLocaleString()}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* Logistics Panel - Left Sidebar style on Desktop */}
-        <div className="lg:col-span-4 space-y-8">
-          <button 
-            onClick={() => setShowVault(true)}
-            className="w-full bg-slate-900 text-white py-12 rounded-[2.5rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl flex flex-col items-center group relative overflow-hidden active:scale-95 transition-all"
-          >
-            <span className="relative z-10 group-hover:scale-110 transition-transform">Secure Transaction</span>
-            <span className="relative z-10 text-[9px] opacity-40 mt-3 font-bold">Initiate Node Settlement</span>
-            <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
-          </button>
-
-          <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 card-shadow space-y-8 group hover:border-blue-200 transition-colors">
-             <div className="flex justify-between items-start">
-               <div>
-                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Selected Headquarters</span>
-                 <p className="font-black text-slate-900 text-2xl tracking-tight leading-tight mt-2">{pkg.accommodation.name}</p>
-               </div>
-               <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-blue-500 transition-colors">
-                 <i className="fas fa-hotel"></i>
-               </div>
-             </div>
-             <div className="flex justify-between items-center py-6 border-y border-slate-50">
-               <span className="text-sm font-black text-blue-600">{pkg.currency} {pkg.accommodation.price_per_night} / node-night</span>
-               <StarRating id="accommodation" />
-             </div>
-             <div className="space-y-2">
-                <span className="text-[9px] font-black uppercase text-slate-300">Policy</span>
-                <p className="text-xs font-bold text-slate-500">{pkg.accommodation.cancellation_policy}</p>
-             </div>
-          </div>
-
-          {pkg.local_events && pkg.local_events.length > 0 && (
-            <div className="bg-white border border-slate-100 p-10 rounded-[2.5rem] card-shadow space-y-8 relative overflow-hidden">
-               <div className="flex items-center justify-between">
-                 <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Live Grounding</h4>
-                 <div className="flex space-x-1">
-                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/40"></span>
-                 </div>
-               </div>
-               <div className="space-y-6">
-                  {pkg.local_events.slice(0, 3).map((e, idx) => (
-                    <div key={idx} className="space-y-2 relative pl-6 border-l border-slate-100">
-                      <div className="absolute -left-[4.5px] top-1 w-2 h-2 rounded-full bg-slate-200"></div>
-                      <p className="font-black text-slate-900 text-sm leading-tight">{e.title}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">{e.date_time}</p>
-                    </div>
-                  ))}
-               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Itinerary Panel - Main Content */}
-        <div className="lg:col-span-8 space-y-12">
-           <div className="flex items-end justify-between px-4">
-              <div>
-                <h3 className="text-4xl font-black tracking-tighter">Operational Plan</h3>
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mt-2">Architecture Sequencing</p>
-              </div>
-              <div className="hidden md:block bg-slate-900 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">{pkg.itinerary.length} Experience Blocks</div>
-           </div>
-
-           <div className="space-y-10">
-              {pkg.itinerary.map((day) => (
-                <div key={day.day} className="bg-white p-10 md:p-14 rounded-[3.5rem] card-shadow border border-slate-100 space-y-10 group hover:shadow-2xl hover:border-blue-100/50 transition-all">
-                  <div className="flex items-center space-x-6">
-                     <div className="w-16 h-16 bg-slate-900 text-white rounded-[1.5rem] flex items-center justify-center font-black text-2xl shadow-xl group-hover:bg-blue-600 transition-colors">
-                       {day.day}
-                     </div>
-                     <div>
-                       <h4 className="text-2xl font-black text-slate-900 tracking-tight">Cycle Phase {day.day}</h4>
-                       <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">Multi-Node Interaction</p>
-                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {day.activities.map((act, i) => (
-                      <div key={i} className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 flex flex-col justify-between hover:bg-white hover:shadow-lg transition-all min-h-[180px]">
-                        <p className="text-slate-700 text-sm font-bold leading-relaxed mb-6">{act}</p>
-                        <div className="flex flex-col space-y-3 pt-6 border-t border-slate-200/40">
-                          <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Feedback Node</span>
-                          <StarRating id={`day-${day.day}-act-${i}`} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-           </div>
-
-           {/* Transit architecture - Horizontal on desktop */}
-           <div className="space-y-6 pt-10">
-              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] ml-4">Logistic Transit Nodes</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 {pkg.transport.map((t, i) => (
-                    <div key={i} className="bg-[#0f172a] text-white p-10 rounded-[3rem] flex flex-col justify-between space-y-10 shadow-2xl relative overflow-hidden group">
-                       <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                         <i className={`fas ${getTransportIcon(t.mode)} text-9xl`}></i>
-                       </div>
-                       
-                       <div className="flex justify-between items-start relative z-10">
-                          <div className="flex items-center space-x-6">
-                             <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-                                <i className={`fas ${getTransportIcon(t.mode)} text-xl`}></i>
-                             </div>
-                             <div>
-                               <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] leading-none mb-2">{t.provider}</p>
-                               <p className="text-xl font-black tracking-tight">{t.origin} &rarr; {t.destination}</p>
-                             </div>
-                          </div>
-                          <span className="text-[9px] font-black uppercase tracking-widest px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400">{t.status}</span>
-                       </div>
-                       
-                       {t.mode !== 'Cab' ? (
-                         <div className="flex items-center justify-between pt-8 border-t border-white/5 relative z-10">
-                            <div>
-                               <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">DEPARTURE</p>
-                               <p className="text-lg font-black">{t.departure_time}</p>
-                            </div>
-                            <div className="flex-grow border-b-2 border-dashed border-white/10 mx-10 relative">
-                               <i className="fas fa-chevron-right absolute -right-2 top-[-7px] text-[10px] text-white/10"></i>
-                            </div>
-                            <div className="text-right">
-                               <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">ARRIVAL</p>
-                               <p className="text-lg font-black">{t.arrival_time}</p>
-                            </div>
-                         </div>
-                       ) : (
-                         <div className="pt-8 border-t border-white/5 relative z-10">
-                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">REFERENCE NODE</p>
-                            <p className="text-base font-black tracking-widest text-blue-400 font-mono">{t.reference_number}</p>
-                         </div>
-                       )}
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ItineraryDisplay;
+             <
